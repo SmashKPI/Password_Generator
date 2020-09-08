@@ -2,150 +2,181 @@
 '''
 Name:       registration.py
 Author:     DTsebrii
-Description:Module to create an accounts system
+Description:Module to create control the 
+    registration process. Module creates
+    user object with unique UID and allows
+    either to create new or authenticate 
+    the old one
 '''
 
 import os 
 import psswd_encr as encr
 
+list_path = "Users\\User_List.csv"
 
-done_flag = True
-
-'''
-Name:       create_user
-Description:contain data from file in a list
-            type variable
-Input:      None
-Output:     user_list - list with users data
-'''
-def create_user(login):
-
-    if not os.path.exists(f"Users\\{login}"):
-        os.makedirs(f"Users\\{login}")
+class User:
+    '''
+    : Represents each user
+    : Variables:
+        name
+    '''
+    list_path = "Users\\User_List.csv"
+    def __init__(self, nm):
+        
+        self.name = nm  # User name 
+        
+        self.ID = self.get_uid()  # User ID (to authentification)
+        self.path = f"Users\\{self.name}"  # Users directory
+        self.create_user()  # Create directory
+        self.passwords = self.get_passwords()  # To show passwords
+        
+        
+    def get_uid(self):
+        '''
+        : Moves through the file and checkes the UID
+        : Output:
+            False if User does not exist
+            cnt if User does exist 
+        '''
+        cnt = 0 # ID value
+        try:
+            user_list = open(list_path, 'r')
+            for entity in user_list.readlines():
+                cnt += 1
+                if entity == f"{self.name}\n":
+                    user_list.close()
+                    return cnt
+            user_list.close()
+            cnt == 0
+            return cnt
+        except Exception as e:
+            print(e)
+            user_list.close()
+            return False
+            
+    def get_passwords(self):
+        '''
+        : Stores all saved passwords
+        : Output:
+            list of passwords 
+        '''
+        psswd_list = []
+        if not os.path.exists(f'Users\\{self.name}\\Passwords.csv'):
+            user_psswd = open(f'Users\\{self.name}\\Passwords.csv', 'w+')
+        else:
+            user_psswd = open(f'Users\\{self.name}\\Passwords.csv', 'r')
+        for entity in user_psswd.readlines():
+            entity = entity.replace("\n", "")
+            psswd_list.append(entity)
+        user_psswd.close()
+        return psswd_list
     
+    
+    def create_user(self):
+        '''
+        Name:       create_user
+        Description:contain data from file in a list
+                    type variable
+        Input:      None
+        '''
+        if not os.path.exists(self.path): os.makedirs(self.path)
+        if not os.path.exists(self.list_path):
+            user_nm = open(self.list_path, 'w+')
+        else:
+            user_nm = open(self.list_path, "a")
+            user_nm.write(f"{self.name}\n")
+        user_nm.close()
+            
+# EO class User::
 
-'''
-Name:       get_file
-Description:contain data from file in a list
-            type variable
-Input:      None
-Output:     user_list - list with users data
-'''
+
 def get_file():
-    
-    if not os.path.exists("Users\\user_list.csv"):
-       user_file = open("Users\\user_list.csv", "w+")
+    '''
+    Name:       get_file
+    Description:
+        contain data from file in a list
+        type variable
+    Output:     user_list - list with users data
+    '''
+    if not os.path.exists(list_path):
+       user_file = open(list_path, "w+")
     else:
-        user_file = open("Users\\user_list.csv", "r")
+        user_file = open(list_path, "r")
     user_list = []
     for char in user_file:
         user_list.append(char)
     user_file.close()
     return user_list 
 
-'''
-Name:       make_passwd
-Description:creates a pair of username and ciphered 
-            password
-Input:      user_list - string got from .csv file 
-Output:     tulp_list - list of username and 
-            password ciphered and stored in dictionary
-'''
-def make_passwd(user_list, login, passwd):
-    global login_check
-    login_check = False
-    dict_list = []
-    tulp_list = []
-    cnt = 0
-    #for elem in user_list:
-    user_list = eval(user_list)
-    user_list = list(user_list)
-    user_list[1] = encr.clean_cipher(user_list[1])
-    for part in user_list[1]:
-        dict_list.append(encr.dict_convertion(part, cnt))
-        if cnt < 3:
-            cnt += 1
-        else:
-            cnt = 0
-    for index in range(int(len(dict_list)/4)):
-        for ind in range(3):
-            dict_list[index].update(dict_list[index+1])
-            del(dict_list[index+1])
-    user_list[1] = dict_list[0]
-    tulp_list = user_list
-    if tulp_list[0] == login:
-        temp_pass = encr.decrypt(tulp_list[1], encr.PASSWORD)
-        if bytes.decode(temp_pass) == passwd:
-            print(f"Welcome, {login}")
-            login_check = True
-            return
-        else:
-            print("Wrong password")
-            return
-    return 
-'''
-Name:       user_check
-Description:check the entered user login among user
-            list
-'''
-def user_check():
-    
-    tulp_list = []
-    dict_store = {}
-    # Getting the Login and Password data
-    login = input("Enter your login:\t")
-    passwd = input("Enter your password:\t")
-    user_list = get_file()
-    for elem in user_list:
-        make_passwd(elem, login, passwd)
-    return login
+def shadows(user, psswd):
+    '''
+    : Store user password in shadows file
+    : Input:
+        user class object
+    '''
+    if not os.path.exists("Data"): os.makedirs("Data") 
+    if not os.path.exists("Data\\Shadows.csv"):
+        sh_file = open("Data\\Shadows.csv", 'w+')
+    else: sh_file = open("Data\\Shadows.csv", 'a')
+    sh_file.write(f"{encr.encrypt(psswd, encr.PASSWORD)}\n")
+    print("Credentials has been written")
+    sh_file.close()
 
-'''
-Name:       registration
-Description:Enter the new user data in the user list file
-Input:      None
-Output:     False if registration succeeded 
-            True if registration failed
-'''
-def registration():
-    user_tulp = ()
-    user_list = get_file()
-    login = input("Login:\t")
-    passwd = input("Password:\t")
-    conf_pass = input("Retype Password:\t")
-    if passwd == conf_pass and login not in user_list:
-        print(f"User {login} has been registered")
-        create_user(login)
-        user_file = open("Users\\user_list.csv", "a+")
-        passwd = encr.encrypt(passwd, encr.PASSWORD)
-        user_tulp = (login, passwd)
-        user_file.write(str(user_tulp)+'\n')
-        return False
-    else:
-        print("Login name has already existed or passwords did not match")
-        return True
+def registration(user_name, user_password):
+    '''
+    : Create an user class and type down required info
+    : Output:
+        My_user - user class object
+    '''
+    login_check = False
+    while True:
+        user_list = get_file()
+        for entity in user_list:
+            entity = entity.replace("\n", "")
+            if entity == user_name:
+                login_check = True
+                break
+        if not login_check:
+            My_user = User(user_name)
+            shadows(My_user, user_password)
+            return My_user
+        else:
+            print("Wrong credentials. Try again")
+            return False
+
+def authentication(ln, pwd):
+    '''
+    : Cehckes whenever input credentials are valid
+    : Input:
+        user - user class variable 
+        ln - login 
+        pwd - password
+    '''
+    global list_path
+    cnt = 0
+    # Open password and login files
+    sh_file = open("Data\\Shadows.csv", 'r')
+    sh_list = [entity.replace("\n", "") for entity in sh_file.readlines()]
+    sh_file.close()
+    ln_file = get_file()
+    for entity in ln_file:
+        cnt += 1
+        if ln == entity.replace("\n", ""):
+            password = sh_list[cnt - 1]
+            password = encr.clean_cipher(password)
+            password = encr.dict_list(password)
+            password = encr.decrypt(password[0], encr.PASSWORD)
+            password = password.decode("utf-8")
+            if pwd == password:
+                My_user = User(ln)
+                print(f"Welcome {ln}!")
+                return My_user
+            else:
+                print("Wrong credentials")
+                return False
+           
+    
 
 if __name__ == "__main__":
     pass
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     
