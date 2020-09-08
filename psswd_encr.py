@@ -1,4 +1,4 @@
-# AES 256 encryption/decryption using pycryptodome library
+import registration as reg
 
 from base64 import b64encode, b64decode
 import hashlib
@@ -44,7 +44,7 @@ Output: psswd_list - list with all data from .csv file
 def read_psswd(login):
     
     psswd_list = []
-    psswd_file = open(f"Users\\{login}\\passwords.csv", "r+")
+    psswd_file = open(f"Users\\{login}\\Passwords.csv", "r+")
     for elem in psswd_file:
         psswd_list.append(clean_cipher(elem))  
     psswd_file.close()
@@ -68,14 +68,19 @@ def dict_convertion(psswd_str, cnt):
         fin_dict['tag'] = psswd_str           
     else:
         print("Decryption Error: password dictionary issue")
+        
     return fin_dict
 
-'''
-Description: merges dict's in a suitable groups
-Input: psswd_list - list with a password info
-Output: dict_list - list with grouped dict's
-'''
+
 def dict_list(psswd_list):
+    '''
+    Description: 
+        merges dict's in a suitable groups
+    Input: 
+        psswd_list - list with a password info
+    Output: 
+        dict_list - list with grouped dict's
+    '''
     dict_list = []
     cnt = 0
     for elem in psswd_list:
@@ -88,6 +93,7 @@ def dict_list(psswd_list):
         for ind in range(3):
             dict_list[index].update(dict_list[index+1])
             del(dict_list[index+1])
+            
     return dict_list
 
 def encrypt(plain_text, password):
