@@ -9,53 +9,48 @@ import registration as reg
 import psswd_encr as encr
 
 if __name__ == "__main__":
-
-    diction_list = []
-    authentication_flag = True
-    main_flag = True
+    
     try:
-        # Authentation part of the code 
-        while authentication_flag:
-            what_to_do = input("Type 'registration' or 'authorization':\t")
-            if  what_to_do.lower() == "registration":
-                while reg.registration():
-                    pass
-                login = reg.user_check()
-                authentication_flag = False
-            elif what_to_do.lower() == "authorization":
-                login = reg.user_check()
-                authentication_flag = False
-            
-        # encode and decode part of the code
-        if reg.login_check:
-            while main_flag: 
-                what_to_do = input("Type generate to generate password, watch to see them or end to done work.\n")
-                if what_to_do.lower() == "generate":
-                    psswdl = gen.password_output()
-                    psswds = gen.clear_string(psswdl)
-                    print(psswds)
-                    if input("Type \"store\" if you want to store a new password:\t".lower()) == "store":
-                        psswds = encr.encrypt(psswds, encr.PASSWORD)
-                        gen.store_password(psswds,login)
-                    main_flag = False
-                elif what_to_do == "watch":
-                    pass_list = encr.read_psswd(login)
-                    for elem in pass_list:
-                        diction_list.append(encr.dict_list(elem))
-                    for elem in diction_list:
-                        elem = encr.decrypt(elem[0], encr.PASSWORD)
-                        print(bytes.decode(elem))
-                    main_flag = False
-                elif what_to_do.lower() == "end":
+        while True:
+            what_to_do = input("Type auth to login or reg to create a new user:\n->")
+            # Registration Part
+            if what_to_do.lower() == "reg":
+                My_user = False
+                while not My_user:
+                    ln = input("Type your login\n->")
+                    pwd = input("Type your password\n->")
+                    My_user = reg.registration(ln, pwd)
+            # Authentification
+            elif what_to_do.lower() == "auth":
+                My_user = False
+                while not My_user:
+                    ln = input("Type your login\n->")
+                    pwd = input("Type your password\n->")
+                    My_user = reg.authentication(ln, pwd)
+            what_to_do = input(f"{My_user.name}, what you want to do?\n->")
+            # Password Generation
+            if what_to_do.lower() == "gen":
+                psswd_lst = gen.password_output()
+                psswd = ''
+                for ent in psswd_lst:
+                    psswd += str(ent)
+                print(f"Your password is:\n->{psswd}")
+                psswd = encr.encrypt(psswd, encr.PASSWORD)
+                what_to_do = input("Do you want to store it?\n->")
+                if what_to_do.lower() == "yes":
+                    gen.store_password(psswd, My_user.name)
+                elif what_to_do.lower() == "no":
                     break
-                else: print("Wrong input, try again")
-        else:
-            raise BaseException
-    except KeyError or IndexError:
-        print("Corupted password data...")
-    except KeyboardInterrupt:
-        print("Dangerous terminating...")
-    except:
-        print("Program is going to close.")
-    print("Good Bye!")
-        
+            # Old passwords monitoring
+            elif what_to_do.lower() == "see":
+                pass_list = encr.read_psswd(My_user.name)
+                dict_lst = []
+                for elem in pass_list:
+                    dict_lst.append(encr.dict_list(elem))
+                for elem in dict_lst:
+                    elem = encr.decrypt(elem[0], encr.PASSWORD)
+                    print(bytes.decode(elem))
+    except Exception as e:
+        print(e)
+    finally:
+        print("Good Bye!")
